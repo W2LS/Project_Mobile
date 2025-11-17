@@ -168,18 +168,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildSaldoCard() {
     return InkWell(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CatatanScreen( // Pastikan CatatanScreen diimpor
-              idUser: _idUser,
-              tokenUser: _tokenUser,
-              namaUser: _namaUser,
-              saldoUser: _saldoUser,
-              fotoProfil: _fotoProfil,
-            ),
-          ),
-        );
+        // 🔥 PERBAIKAN: Mengganti Navigator.push lama dengan Get.toNamed.
+        // Ini mengarah ke rute /notes yang sudah di-binding dengan NoteController.
+        Get.toNamed('/notes');
       },
       child: Card(
         elevation: 2,
