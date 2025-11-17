@@ -1,0 +1,44 @@
+name: modul2_demo_revisi
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.3 <4.0.0' # Versi sdk saya sesuaikan agar lebih fleksibel
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # DEPENDENSI BARU DITAMBAHKAN DI SINI
+  carousel_slider: ^5.1.1
+  intl: ^0.19.0
+  marquee: ^2.2.3
+  connectivity_plus: ^5.0.2
+  http: ^1.2.1
+  shared_preferences: ^2.2.3
+  url_launcher: ^6.3.1
+  get: ^4.6.6
+  dio: ^5.4.0
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^3.0.1 # Versi flutter_lints saya update ke yang lebih umum
+
+flutter:
+  uses-material-design: true
+
+  # Bagian fonts ditambahkan di sini
+  fonts:
+    - family: PlusJakartaSans
+      fonts:
+        - asset: assets/fonts/PlusJakartaSans-Regular.ttf
+        - asset: assets/fonts/PlusJakartaSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/PlusJakartaSans-Bold.ttf
+          weight: 700
