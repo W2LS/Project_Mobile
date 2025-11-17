@@ -36,32 +36,37 @@ class NoteController extends GetxController {
   Future<void> loadNotes() async {
     isLoading.value = true;
 
-    // Asumsi: Kita cek koneksi internet
-    bool isOnline = await _checkConnectivity();
+    // 🔥 PERBAIKAN: Masukkan seluruh logika ke dalam try-catch-finally 🔥
+    try {
+      bool isOnline = await _checkConnectivity();
 
-    if (isOnline) {
-      // 1. Baca dari Cloud (Eksperimen Kecepatan Cloud Read)
-      final stopwatch = Stopwatch()..start();
-      final cloudData = await _supabaseService.getNotes();
-      stopwatch.stop();
-      cloudReadTime.value = '${stopwatch.elapsedMilliseconds} ms';
+      if (isOnline) {
+        // 1. Baca dari Cloud (Eksperimen Kecepatan Cloud Read)
+        final stopwatch = Stopwatch()..start();
+        final cloudData = await _supabaseService.getNotes();
+        stopwatch.stop();
+        cloudReadTime.value = '${stopwatch.elapsedMilliseconds} ms';
 
-      notes.value = cloudData;
+        notes.value = cloudData;
+        _syncToLocal(cloudData);
 
-      // Sinkronisasi data cloud ke lokal (cache)
-      _syncToLocal(cloudData);
+      } else {
+        // 2. Baca dari Lokal (Eksperimen Kecepatan Local Read)
+        final stopwatch = Stopwatch()..start();
+        notes.value = _hiveService.getNotes();
+        stopwatch.stop();
+        localReadTime.value = '${stopwatch.elapsedMilliseconds} ms';
 
-    } else {
-      // 2. Baca dari Lokal (Eksperimen Kecepatan Local Read)
-      final stopwatch = Stopwatch()..start();
-      notes.value = _hiveService.getNotes();
-      stopwatch.stop();
-      localReadTime.value = '${stopwatch.elapsedMilliseconds} ms';
-
-      Get.snackbar("Offline Mode", "Menampilkan data dari penyimpanan lokal.", snackPosition: SnackPosition.BOTTOM);
+        Get.snackbar("Offline Mode", "Menampilkan data dari penyimpanan lokal.", snackPosition: SnackPosition.BOTTOM);
+      }
+    } catch (e) {
+      // Jika terjadi error saat akses Supabase/Hive, set notes kosong dan beri notifikasi.
+      Get.snackbar("Error Data", "Gagal memuat data: ${e.toString()}", snackPosition: SnackPosition.BOTTOM);
+      notes.clear(); // Bersihkan list
+    } finally {
+      // 🔥 Wajib: Set isLoading = false di sini, terlepas dari sukses/gagal 🔥
+      isLoading.value = false;
     }
-
-    isLoading.value = false;
   }
 
   // --- LOGIC UTAMA: MENYIMPAN DATA (Create/Update) ---
@@ -114,7 +119,10 @@ class NoteController extends GetxController {
   void saveTheme(bool isDark) {
     LocalStorageInitializer.sharedPreferences.setBool('isDarkTheme', isDark);
     Get.snackbar("SharedPreferences", "Tema gelap: ${isDark ? 'ON' : 'OFF'} berhasil disimpan.", snackPosition: SnackPosition.BOTTOM);
+    update();
   }
+
+
 
   bool getTheme() {
     // Eksperimen waktu baca shared preferences tidak diukur di sini karena sangat cepat
