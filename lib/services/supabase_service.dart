@@ -1,4 +1,6 @@
 // lib/services/supabase_service.dart
+// Database (CRUD Notes)
+// Menjalankan operasi Cloud Write Time (Insert) dan Cloud Read Time (Select) yang Anda benchmark di NoteController. Row Level Security (RLS) di Supabase-lah yang memfilter data berdasarkan auth.uid().
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/note_model.dart';

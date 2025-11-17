@@ -1,4 +1,7 @@
 // lib/services/local_storage_initializer.dart
+// penerapan HIVE dan shared_preferences
+// Menyiapkan direktori penyimpanan dan mendaftarkan Adapter yang dihasilkan oleh code generator.
+// Menginisialisasi instance SharedPreferences dan menyimpannya secara statis (static late) agar dapat diakses dari mana saja tanpa perlu context Flutter.
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/note_model.dart';

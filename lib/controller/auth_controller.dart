@@ -1,4 +1,6 @@
 // lib/controller/auth_controller.dart
+// Semua logika login dan register menggunakan client Supabase.
+// Mengelola sesi pengguna, login, register, dan logout.
 
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';

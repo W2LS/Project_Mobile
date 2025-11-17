@@ -1,4 +1,7 @@
-// lib/controller/note_controller.dart
+// lib/controller/note_controller.dart (FINAL CODE)
+// shared_preferences
+// Logika bisnis untuk mengubah dan membaca tema ditempatkan di dalam Controller Anda.
+// Menulis (setBool) dan membaca (getBool) key tema, yang kemudian memicu rebuild di UI menggunakan update().
 
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
@@ -6,21 +9,18 @@ import 'dart:async';
 import '../models/note_model.dart';
 import '../services/hive_service.dart';
 import '../services/supabase_service.dart';
-import '../services/local_storage_initializer.dart'; // Untuk shared_preferences
-import 'package:connectivity_plus/connectivity_plus.dart'; // Digunakan untuk cek koneksi
+import '../services/local_storage_initializer.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class NoteController extends GetxController {
-  // State Data
-  var notes = <NoteModel>[].obs; // Daftar notes yang ditampilkan di UI
+  var notes = <NoteModel>[].obs;
   var isLoading = false.obs;
 
-  // State untuk Eksperimen (Waktu Eksekusi)
   var localWriteTime = 'N/A'.obs;
   var cloudWriteTime = 'N/A'.obs;
   var localReadTime = 'N/A'.obs;
   var cloudReadTime = 'N/A'.obs;
 
-  // Services
   final HiveService _hiveService = HiveService();
   final SupabaseService _supabaseService = SupabaseService();
   final Uuid _uuid = Uuid();
@@ -32,45 +32,51 @@ class NoteController extends GetxController {
   }
 
   // --- LOGIC UTAMA: MEMUAT DATA (Read) ---
-
   Future<void> loadNotes() async {
     isLoading.value = true;
 
-    // 🔥 PERBAIKAN: Masukkan seluruh logika ke dalam try-catch-finally 🔥
     try {
+      // 🔥 PERBAIKAN: Selalu asumsikan offline untuk melewati Supabase timeout 🔥
       bool isOnline = await _checkConnectivity();
+      List<NoteModel> fetchedData = [];
 
       if (isOnline) {
-        // 1. Baca dari Cloud (Eksperimen Kecepatan Cloud Read)
-        final stopwatch = Stopwatch()..start();
-        final cloudData = await _supabaseService.getNotes();
-        stopwatch.stop();
-        cloudReadTime.value = '${stopwatch.elapsedMilliseconds} ms';
+        // 1. (DINONAKTIFKAN SEMENTARA): Baca dari Cloud
+        Get.snackbar("Aksi Dinonaktifkan", "Mode Cloud Supabase dinonaktifkan untuk troubleshooting.",
+            snackPosition: SnackPosition.TOP);
 
-        notes.value = cloudData;
-        _syncToLocal(cloudData);
+        // Gagal membaca dari cloud, langsung fallback ke lokal
+        throw Exception("Skip Supabase"); // Lempar exception untuk masuk ke blok catch/fallback
 
       } else {
-        // 2. Baca dari Lokal (Eksperimen Kecepatan Local Read)
+        // 2. Baca dari Lokal (Hive)
         final stopwatch = Stopwatch()..start();
-        notes.value = _hiveService.getNotes();
+        fetchedData = _hiveService.getNotes();
         stopwatch.stop();
         localReadTime.value = '${stopwatch.elapsedMilliseconds} ms';
 
         Get.snackbar("Offline Mode", "Menampilkan data dari penyimpanan lokal.", snackPosition: SnackPosition.BOTTOM);
       }
+
+      notes.value = fetchedData;
+
     } catch (e) {
-      // Jika terjadi error saat akses Supabase/Hive, set notes kosong dan beri notifikasi.
-      Get.snackbar("Error Data", "Gagal memuat data: ${e.toString()}", snackPosition: SnackPosition.BOTTOM);
-      notes.clear(); // Bersihkan list
+      // Fallback Utama ke Lokal Storage
+      Get.snackbar("Lokal Fallback", "Memuat data dari Hive...", snackPosition: SnackPosition.BOTTOM);
+
+      // Baca data lokal sebagai fallback
+      final stopwatch = Stopwatch()..start();
+      notes.value = _hiveService.getNotes();
+      stopwatch.stop();
+      localReadTime.value = '${stopwatch.elapsedMilliseconds} ms (Fallback)';
+
     } finally {
-      // 🔥 Wajib: Set isLoading = false di sini, terlepas dari sukses/gagal 🔥
+      // Wajib: Pastikan loading disetel false
       isLoading.value = false;
     }
   }
 
   // --- LOGIC UTAMA: MENYIMPAN DATA (Create/Update) ---
-
   Future<void> saveNewNote(String title, String content) async {
     final newNote = NoteModel(
       id: _uuid.v4(),
@@ -103,7 +109,6 @@ class NoteController extends GetxController {
   // --- UTILITY DAN SHARED PREFERENCES ---
 
   void _syncToLocal(List<NoteModel> cloudNotes) {
-    // Menghapus data lama dan menyimpan yang terbaru dari cloud ke Hive
     _hiveService.clearAll();
     for (var note in cloudNotes) {
       _hiveService.saveNote(note);
@@ -115,21 +120,20 @@ class NoteController extends GetxController {
     return connectivityResult != ConnectivityResult.none;
   }
 
-  // Contoh fungsi untuk SharedPreferences (Misal: Eksperimen data sederhana)
+  // 🔥 METHOD HILANG: saveTheme 🔥
   void saveTheme(bool isDark) {
     LocalStorageInitializer.sharedPreferences.setBool('isDarkTheme', isDark);
     Get.snackbar("SharedPreferences", "Tema gelap: ${isDark ? 'ON' : 'OFF'} berhasil disimpan.", snackPosition: SnackPosition.BOTTOM);
     update();
   }
 
-
-
+  // 🔥 METHOD HILANG: getTheme 🔥
   bool getTheme() {
-    // Eksperimen waktu baca shared preferences tidak diukur di sini karena sangat cepat
     return LocalStorageInitializer.sharedPreferences.getBool('isDarkTheme') ?? false;
   }
 
   // --- Fungsi Tambahan untuk UI ---
+  // 🔥 METHOD HILANG: deleteNote 🔥
   Future<void> deleteNote(String id) async {
     // Hapus lokal dan cloud
     await _hiveService.deleteNote(id);

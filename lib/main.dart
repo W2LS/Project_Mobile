@@ -1,3 +1,6 @@
+// Inisialisasi Klien Supabase
+// Menghubungkan aplikasi Flutter ke backend Supabase menggunakan URL dan Anon Key Anda.
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

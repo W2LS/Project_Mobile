@@ -1,5 +1,6 @@
 // lib/models/note_model.dart
-
+// pengimplementasian HIVE
+//Mendefinisikan struktur data Notes dan menghasilkan adaptor agar Hive bisa menyimpan objek ini ke disk.
 // 1. SEMUA IMPORTS (Directives)
 import 'package:hive/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

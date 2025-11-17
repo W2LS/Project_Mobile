@@ -1,5 +1,6 @@
 // lib/services/hive_service.dart
-
+// implementasi HIVE
+// Menyediakan fungsi CRUD untuk NoteController dan menangani Local Read Time dan Local Write Time di benchmarking.
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/note_model.dart';
 

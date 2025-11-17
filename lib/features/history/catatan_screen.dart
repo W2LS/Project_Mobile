@@ -1,5 +1,7 @@
 // lib/features/history/catatan_screen.dart (FINAL FIX: Menggunakan GetBuilder)
-
+// immplementasian shared_preferences
+// Data sederhana ini ditampilkan dan diubah menggunakan SwitchListTile di halaman eksperimen Anda.
+// Menyediakan antarmuka bagi Aslab untuk menguji fitur ini dan membandingkannya dengan benchmarking data terstruktur di atas.
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controller/note_controller.dart';
