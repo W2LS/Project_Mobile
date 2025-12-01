@@ -1,7 +1,4 @@
-// lib/features/history/catatan_screen.dart (FINAL FIX: Menggunakan GetBuilder)
-// immplementasian shared_preferences
-// Data sederhana ini ditampilkan dan diubah menggunakan SwitchListTile di halaman eksperimen Anda.
-// Menyediakan antarmuka bagi Aslab untuk menguji fitur ini dan membandingkannya dengan benchmarking data terstruktur di atas.
+// lib/features/history/catatan_screen.dart (FINAL CODE BENAR)
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controller/note_controller.dart';
@@ -10,8 +7,6 @@ const Color subMainColor = Color(0xFF42A5F5);
 
 class CatatanScreen extends StatelessWidget {
   const CatatanScreen({super.key});
-
-  // Widget helper tetap sama
 
   // --- Widget Utama Build ---
   @override
@@ -31,53 +26,50 @@ class CatatanScreen extends StatelessWidget {
           ),
         ],
       ),
-      // 🔥 PERBAIKAN: Gunakan GetBuilder untuk merebuild area yang sensitif 🔥
-      body: GetBuilder<NoteController>(
-        // ID Opsional bisa ditambahkan jika hanya ingin merebuild sebagian
-        builder: (controller) {
-          if (controller.isLoading.value) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 1. Panggil Tabel Eksperimen (Sekarang bebas dari Obx/GetX error)
-                _buildBenchmarkTable(controller),
+      // 🔥 PERBAIKAN: Gunakan Obx untuk merebuild seluruh body ketika state berubah 🔥
+      body: Obx(() {
+        if (controller.isLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. Panggil Tabel Eksperimen
+              _buildBenchmarkTable(controller), // Akan mengakses .value di dalam
 
-                const SizedBox(height: 30),
+              const SizedBox(height: 30),
 
-                // 2. Daftar Notes
-                Text("Daftar Catatan (${controller.notes.length} item)", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                const Divider(),
+              // 2. Daftar Notes
+              Text("Daftar Catatan (${controller.notes.length} item)", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Divider(),
 
-                if (controller.notes.isEmpty)
-                  const Center(child: Padding(
-                    padding: EdgeInsets.only(top: 50.0),
-                    child: Text("Tidak ada catatan. Tambahkan satu untuk menguji tulis/baca!"),
-                  )),
+              if (controller.notes.isEmpty)
+                const Center(child: Padding(
+                  padding: EdgeInsets.only(top: 50.0),
+                  child: Text("Tidak ada catatan. Tambahkan satu untuk menguji tulis/baca!"),
+                )),
 
-                // Notes List
-                ...controller.notes.map((note) => Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ListTile(
-                      title: Text(note.title, style: const TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text("ID: ${note.id.substring(0, 8)}... | Dibuat: ${note.createdAt.day}/${note.createdAt.month}"),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => controller.deleteNote(note.id),
-                      ),
-                      onTap: () {
-                        Get.defaultDialog(title: note.title, content: Text(note.content));
-                      }
-                  ),
-                )).toList(),
-              ],
-            ),
-          );
-        },
-      ),
+              // Notes List
+              ...controller.notes.map((note) => Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: ListTile(
+                    title: Text(note.title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text("ID: ${note.id.substring(0, 8)}... | Dibuat: ${note.createdAt.day}/${note.createdAt.month}"),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => controller.deleteNote(note.id),
+                    ),
+                    onTap: () {
+                      Get.defaultDialog(title: note.title, content: Text(note.content));
+                    }
+                ),
+              )).toList(),
+            ],
+          ),
+        );
+      }),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddNoteDialog(controller),
         backgroundColor: subMainColor,
@@ -87,8 +79,9 @@ class CatatanScreen extends StatelessWidget {
   }
 
 
-  // --- Widget Helper: Tabel Hasil Eksperimen (DIUBAH UNTUK BEKERJA DENGAN GetBuilder) ---
+  // --- Widget Helper: Tabel Hasil Eksperimen (TIDAK PERLU Obx/GetBuilder) ---
   Widget _buildBenchmarkTable(NoteController controller) {
+    // Karena _buildBenchmarkTable dipanggil di dalam Obx, kita bisa mengakses state langsung
     return Card(
       elevation: 2,
       child: Padding(
@@ -99,7 +92,6 @@ class CatatanScreen extends StatelessWidget {
             const Text("Tabel Hasil Pengujian Waktu (Ms)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const Divider(height: 15),
 
-            // 🔥 PERBAIKAN: TIDAK ADA Obx di sekitar Table 🔥
             Table(
               columnWidths: const {
                 0: FlexColumnWidth(2),
@@ -119,7 +111,7 @@ class CatatanScreen extends StatelessWidget {
                 TableRow(
                   children: [
                     const Padding(padding: EdgeInsets.all(8.0), child: Text("Waktu Tulis (Write)")),
-                    // Akses nilai tanpa .obs karena Parent sudah GetBuilder
+                    // Akses nilai dengan .value (di dalam Obx)
                     Padding(padding: EdgeInsets.all(8.0), child: Text(controller.localWriteTime.value)),
                     Padding(padding: EdgeInsets.all(8.0), child: Text(controller.cloudWriteTime.value)),
                   ],
@@ -136,12 +128,17 @@ class CatatanScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // Shared Prefs Switch - Diperbarui oleh GetBuilder
-            const Text("Contoh Data Sederhana (Shared Prefs):", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            // Shared Prefs Switch - Diperbarui menggunakan state isDarkTheme
+            const Text("Contoh Data Sederhana (Tema Gelap):", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             SwitchListTile(
-              title: Text("Toggle Tema Gelap: ${controller.getTheme() ? 'Aktif' : 'Nonaktif'}"),
-              value: controller.getTheme(),
-              onChanged: (val) => controller.saveTheme(val),
+              // 🔥 KOREKSI 1 & 2: Ganti getTheme() dengan getter isDarkTheme
+              title: Text("Toggle Tema Gelap: ${controller.isDarkTheme ? 'Aktif' : 'Nonaktif'}"),
+
+              // 🔥 KOREKSI 3: Ganti getTheme() dengan getter isDarkTheme
+              value: controller.isDarkTheme,
+
+              // 🔥 KOREKSI 4: Ganti saveTheme() dengan method toggleTheme()
+              onChanged: (val) => controller.toggleTheme(val),
               dense: true,
               activeColor: subMainColor,
             )

@@ -1,20 +1,25 @@
-// lib/controller/note_controller.dart (FINAL CODE)
-// shared_preferences
-// Logika bisnis untuk mengubah dan membaca tema ditempatkan di dalam Controller Anda.
-// Menulis (setBool) dan membaca (getBool) key tema, yang kemudian memicu rebuild di UI menggunakan update().
+// lib/controller/note_controller.dart (FINAL CODE BENAR)
 
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:async';
 import '../models/note_model.dart';
 import '../services/hive_service.dart';
 import '../services/supabase_service.dart';
-import '../services/local_storage_initializer.dart';
+
+// 🔥 HAPUS IMPOR LAMA KARENA FILE TIDAK ADA 🔥
+// import '../services/local_storage_initializer.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 class NoteController extends GetxController {
   var notes = <NoteModel>[].obs;
   var isLoading = false.obs;
+
+  // ✅ PENGELOLAAN TEMA BARU: State Observabel untuk tema
+  // Karena kita tidak bisa membaca dari local storage, kita set default false.
+  final RxBool _isDarkTheme = false.obs;
+  bool get isDarkTheme => _isDarkTheme.value;
 
   var localWriteTime = 'N/A'.obs;
   var cloudWriteTime = 'N/A'.obs;
@@ -28,6 +33,7 @@ class NoteController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    // 💡 Tidak bisa memuat tema dari storage, gunakan default 'false'
     loadNotes();
   }
 
@@ -106,6 +112,22 @@ class NoteController extends GetxController {
     loadNotes();
   }
 
+  // --- LOGIC TEMA (BARU DAN DIBENAHI) ---
+
+  // ✅ Fungsi untuk mengganti tema (HANYA MENGUBAH STATE, TIDAK MENULIS KE STORAGE)
+  void toggleTheme(bool isDark) {
+    _isDarkTheme.value = isDark;
+
+    // Perbarui GetX agar UI (GetMaterialApp) merespon perubahan tema
+    Get.changeThemeMode(isDark ? ThemeMode.dark : ThemeMode.light);
+
+    Get.snackbar(
+        "Tema Diperbarui",
+        "Tema gelap: ${isDark ? 'ON' : 'OFF'}. (Tidak tersimpan permanen)",
+        snackPosition: SnackPosition.BOTTOM
+    );
+  }
+
   // --- UTILITY DAN SHARED PREFERENCES ---
 
   void _syncToLocal(List<NoteModel> cloudNotes) {
@@ -120,20 +142,7 @@ class NoteController extends GetxController {
     return connectivityResult != ConnectivityResult.none;
   }
 
-  // 🔥 METHOD HILANG: saveTheme 🔥
-  void saveTheme(bool isDark) {
-    LocalStorageInitializer.sharedPreferences.setBool('isDarkTheme', isDark);
-    Get.snackbar("SharedPreferences", "Tema gelap: ${isDark ? 'ON' : 'OFF'} berhasil disimpan.", snackPosition: SnackPosition.BOTTOM);
-    update();
-  }
-
-  // 🔥 METHOD HILANG: getTheme 🔥
-  bool getTheme() {
-    return LocalStorageInitializer.sharedPreferences.getBool('isDarkTheme') ?? false;
-  }
-
-  // --- Fungsi Tambahan untuk UI ---
-  // 🔥 METHOD HILANG: deleteNote 🔥
+  // 🔥 METHOD HILANG: deleteNote (DIBENAHI, sebelumnya ada di kode Anda)
   Future<void> deleteNote(String id) async {
     // Hapus lokal dan cloud
     await _hiveService.deleteNote(id);
